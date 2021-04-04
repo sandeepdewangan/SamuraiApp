@@ -1,10 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SamuraiApp.Domain;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SamuraiApp.Data
 {
@@ -14,14 +11,16 @@ namespace SamuraiApp.Data
         public DbSet<Quote> Quotes { get; set; }
         public DbSet<Battle> Battles { get; set; }
 
-        // Dont do this. Configure it in run time.
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer("Data Source = (localdb)\\MSSQLLocalDB; Initial Catalog=SamuraiAppData");
+            optionsBuilder.UseSqlServer(
+                "Data Source= (localdb)\\MSSQLLocalDB; Initial Catalog=SamuraiAppData")
+                .LogTo(Console.WriteLine, new[] { DbLoggerCategory.Database.Command.Name//,
+                                                 //DbLoggerCategory.Database.Transaction.Name
+                                               },
+                       LogLevel.Information)
+                .EnableSensitiveDataLogging();
         }
-
-        // many to many relationship estab. between Battle and Samurai.
-        // Between them a table exists named BattleSamurai which has payload DateJoined.
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Samurai>()
@@ -32,6 +31,7 @@ namespace SamuraiApp.Data
                bs => bs.HasOne<Samurai>().WithMany())
              .Property(bs => bs.DateJoined)
              .HasDefaultValueSql("getdate()");
+
 
         }
     }
